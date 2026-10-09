@@ -15,8 +15,6 @@ A live SSH honeypot on **AWS EC2** with a custom **Python security layer**: thre
 ![MITRE](https://img.shields.io/badge/MITRE-ATT%26CK-red)
 ![Telegram](https://img.shields.io/badge/Alerts-Telegram-26A5E4?logo=telegram&logoColor=white)
 
-**YOUR NAME** · YOUR COLLEGE · Guide: GUIDE NAME
-
 </div>
 
 ---
