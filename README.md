@@ -25,13 +25,13 @@ A live SSH honeypot on **AWS EC2** with a custom **Python security layer**: thre
 
 [![Real data dashboard](https://img.shields.io/badge/OPEN-Real_Data_Dashboard-4f6bed?style=for-the-badge)](https://rutuja-late.github.io/honeypot-attack-detection/)
 &nbsp;
-[![Simulated attack demo](https://img.shields.io/badge/WATCH-Simulated_Attack_Demo-dc2626?style=for-the-badge)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html)
+[![Simulated attack demo](https://img.shields.io/badge/WATCH-Simulated_Attack_Demo-dc2626?style=for-the-badge)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html?v=2)
 
 <sub>🔴 Real data from my running honeypot, refreshed every ~3 minutes, attacker IPs masked &nbsp;·&nbsp; 🎬 Scripted Kali attack: brute force → login → commands → auto-block → Telegram alert</sub>
 
 <br><br>
 
-[![Dashboard preview, click to open the animated demo](screenshots/dashboard.png)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html)
+[![Dashboard preview, click to open the animated demo](screenshots/dashboard.png)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html?v=2)
 
 <sub>Click the preview to open the animated demo. (GitHub READMEs cannot run live pages, so the buttons open them in a new tab.)</sub>
 
