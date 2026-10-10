@@ -23,15 +23,32 @@ A live SSH honeypot on **AWS EC2** with a custom **Python security layer**: thre
 
 <div align="center">
 
-![Live dashboard](docs/dashboard.png)
+[![Real data dashboard](https://img.shields.io/badge/OPEN-Real_Data_Dashboard-4f6bed?style=for-the-badge)](https://rutuja-late.github.io/honeypot-attack-detection/)
+&nbsp;
+[![Simulated attack demo](https://img.shields.io/badge/WATCH-Simulated_Attack_Demo-dc2626?style=for-the-badge)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html)
 
-*Live dashboard: events, unique IPs, top attackers, countries, passwords and a real-time feed*
+<sub>🔴 Real data from my running honeypot, refreshed every ~3 minutes, attacker IPs masked &nbsp;·&nbsp; 🎬 Scripted Kali attack: brute force → login → commands → auto-block → Telegram alert</sub>
+
+<br><br>
+
+[![Dashboard preview, click to open the animated demo](screenshots/dashboard.png)](https://rutuja-late.github.io/honeypot-attack-detection/demo.html)
+
+<sub>Click the preview to open the animated demo. (GitHub READMEs cannot run live pages, so the buttons open them in a new tab.)</sub>
+
+<br>
+
+<table>
+<tr>
+<td align="center"><b>📱 Telegram alerts</b><br><sub>High severity + auto-block</sub></td>
+<td align="center"><b>📄 MITRE incident report</b><br><sub>Auto-generated per attacker</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="screenshots/telegram-alert.png" width="330" alt="Telegram alert"></td>
+<td align="center"><img src="screenshots/report.png" width="480" alt="Incident report"></td>
+</tr>
+</table>
 
 </div>
-
-| 📱 Telegram alert | 📄 Incident report |
-|---|---|
-| ![Telegram alert](docs/telegram-alert.png) | ![Report](docs/report.png) |
 
 ---
 
@@ -68,6 +85,19 @@ flowchart LR
 | 🛡️ | **XSS-safe UI** | Attacker-controlled data is always HTML-escaped |
 | 🧭 | **MITRE ATT&CK** | Observed behavior mapped to technique IDs |
 | 📄 | **Incident reports** | Summary, timeline, IOCs, techniques, actions, recommendations |
+| 🌐 | **Public snapshot dashboard** | Real data with masked IPs, published to GitHub Pages every ~3 minutes |
+
+---
+
+## 🌐 How the GitHub dashboard gets real data
+
+The live dashboard runs only on my EC2 server and is opened through an SSH tunnel (it has no login, so it is never public). To still show real data on GitHub:
+
+1. A cron job runs `export_snapshot.py` every 3 minutes on the server.
+2. It reads the local stats, **masks attacker IPs** (`x.x.x.xxx`), hides my own lab IP, and pushes a single `stats.json` to the `data` branch using a token limited to this one repo.
+3. The GitHub Pages dashboard (`docs/index.html`) reads that file, so it shows **real data, about 3 minutes behind**. It is a snapshot, not a live feed.
+
+`docs/demo.html` is a separate **simulated** page that plays a scripted Kali attack, for viewing without the server.
 
 ---
 
@@ -139,9 +169,11 @@ flowchart LR
 ├── mitre.py           event → ATT&CK technique mapping
 ├── report.py          incident report generator
 ├── main.py            engine: tail log → db → score → act
+├── export_snapshot.py masks IPs and publishes stats.json (cron, every 3 min)
 ├── dashboard/         Flask app + templates/index.html
 ├── sample-reports/    example generated incident report
-└── docs/              screenshots
+├── docs/              GitHub Pages: index.html (real data), demo.html (simulated)
+└── screenshots/       dashboard.png, telegram-alert.png, report.png
 ```
 
 ---
