@@ -1,0 +1,159 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Honeypot SOC Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--pri:#4f6bed;--navy:#14206b;--txt:#1e293b;--mut:#64748b;--line:#e8ecf5}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,system-ui,sans-serif;color:var(--txt);min-height:100vh;
+background:radial-gradient(900px 500px at 8% -5%,#fde7c8aa,transparent),radial-gradient(900px 500px at 95% 0,#c9d8ffaa,transparent),radial-gradient(800px 500px at 60% 100%,#d6f5e6aa,transparent),#f4f6fc}
+nav{display:flex;align-items:center;gap:26px;background:var(--navy);color:#c9d3ff;padding:0 24px;height:52px;font-size:13px}
+nav .logo{color:#fff;font-weight:700;letter-spacing:.5px;margin-right:12px}nav .logo span{color:#7dd3fc}
+nav a{color:#c9d3ff;text-decoration:none;height:52px;display:flex;align-items:center;border-bottom:3px solid transparent}
+nav a.on,nav a:hover{color:#fff;border-color:#7dd3fc}
+.live{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;background:#ffffff18;padding:6px 14px;border-radius:99px}
+.dot{width:9px;height:9px;border-radius:50%;background:#22c55e;animation:p 1.4s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 #22c55eaa}100%{box-shadow:0 0 0 9px #22c55e00}}
+.app{display:flex}
+aside{width:190px;padding:20px 14px;flex-shrink:0;font-size:13px;color:var(--mut)}
+aside small{display:block;margin:0 10px 8px;font-size:11px;letter-spacing:1px}
+aside a{display:block;padding:9px 12px;border-radius:8px;color:var(--txt);text-decoration:none;margin-bottom:3px}
+aside a.on,aside a:hover{background:#fff;box-shadow:0 1px 4px #1e293b14}
+main{flex:1;min-width:0;padding:20px 24px 30px}
+h2{margin:0 0 14px;font-size:20px}
+#alert{display:none;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:13px}
+.row{display:grid;gap:16px;margin-bottom:16px}
+.k4{grid-template-columns:repeat(4,1fr)}.r21{grid-template-columns:2fr 1fr}.r3{grid-template-columns:repeat(3,1fr)}
+.box,.card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px #1e293b0f;min-width:0;transition:transform .2s,box-shadow .2s}
+.card:hover,.box:hover{transform:translateY(-3px);box-shadow:0 8px 22px #1e293b1c}
+.card small{font-size:12px;color:var(--mut)}
+.card b{display:block;font-size:30px;margin:6px 0 8px}
+.box h3{margin:0 0 12px;font-size:14px}
+.b{background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--mut);text-align:left;padding:6px;font-weight:600}
+td{padding:8px 6px;border-top:1px solid var(--line);word-break:break-all}
+tbody tr:hover{background:#f6f8ff}
+.sc{display:flex;align-items:center;gap:8px}.sc i{display:block;height:6px;border-radius:4px;background:var(--c);width:0;transition:width .9s}
+.sc span{width:56px;background:#eef1fa;border-radius:4px;overflow:hidden;display:block}
+.blue{background:linear-gradient(160deg,#5b78f5,#3d57d6);color:#fff}
+.blue small{color:#dbe3ff}.blue b{font-size:64px;font-weight:300;margin:10px 0}
+.mini{display:flex;align-items:flex-end;gap:5px;height:70px}
+.mini i{flex:1;background:#ffffff55;border-radius:3px 3px 0 0;height:4px;transition:height .9s}
+.mini i:last-child{background:#fff}
+.hm{display:grid;grid-template-columns:46px repeat(24,1fr);align-items:center;font-size:10px;color:var(--mut)}
+.hm .hh{font-style:normal;text-align:center}.hm .dl{font-size:11px}
+.c{display:flex;align-items:center;justify-content:center;height:24px}
+.c u{display:block;width:var(--s);height:var(--s);border-radius:50%;background:var(--pri);opacity:var(--o);transition:transform .2s;text-decoration:none}
+.c:hover u{transform:scale(1.7)}
+.bar{margin:10px 0;font-size:12px}.bar div{background:#eef1fa;border-radius:4px;height:8px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--c);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.feed{max-height:420px;overflow:auto}
+.fi{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:background .2s}
+.fi:hover{background:#f6f8ff}.fi div{min-width:0}
+.fi b{display:block;font-size:12px}.fi small{display:block;color:var(--mut);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi time{font-size:11px;color:var(--mut)}
+.fi p{display:none;grid-column:1/4;margin:4px 0 0;padding:8px;background:#f3f5fc;border-radius:8px;font-size:11px;color:#334155;word-break:break-all;line-height:1.6}
+.fi.open p{display:block}.fi.open small{white-space:normal}
+.fi.new{animation:in .6s ease}
+@keyframes in{from{opacity:0;transform:translateX(30px);background:#e0e7ff}to{opacity:1;transform:none}}
+.av{width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--c) 16%,#fff);color:var(--c);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+@media(max-width:1100px){aside{display:none}.k4{grid-template-columns:1fr 1fr}.r21,.r3{grid-template-columns:1fr}}
+.sim{background:#e8f1ff;border:1px solid #bcd3ff;color:#1e3a8a;padding:9px 14px;border-radius:12px;margin-bottom:14px;font-size:13px}.sim a{color:#1e3a8a;font-weight:600}
+</style></head><body>
+<nav><span class="logo">&#128737; HONEYPOT <span>SOC</span></span><a class="on" href="#top">Dashboard</a><a href="#att">Attackers</a><a href="#cred">Credentials</a><a href="#ev">Live events</a>
+<div class="live"><span class="dot"></span>SNAPSHOT &middot; updated <span id="upd">--</span></div></nav>
+<div class="app"><aside><small>SITE</small><a class="on" href="#top">Dashboard</a><a href="#att">Attackers</a><a href="#cred">Credentials</a><a href="#ev">Live events</a>
+<small style="margin-top:22px">SYSTEM</small><a href="#top">Cowrie honeypot</a><a href="#top">AWS EC2 Mumbai</a></aside>
+<main id="top"><div class="sim">&#128225; <b>Real data</b> from my running honeypot on AWS EC2. Attacker IPs are masked, and this page reloads a snapshot the server publishes every few minutes. For the animated simulated attack, open <a href="demo.html">demo.html</a>.</div><div id="alert"></div><h2>Attack Overview</h2>
+<div class="row k4">
+ <div class="card"><small>Total events</small><b id="k1">0</b><span id="c1"></span></div>
+ <div class="card"><small>Unique IPs</small><b id="k2">0</b><span id="c2"></span></div>
+ <div class="card"><small>Blocked IPs</small><b id="k3" style="color:#dc2626">0</b><span id="c3"></span></div>
+ <div class="card"><small>High / Critical</small><b id="k4" style="color:#ea580c">0</b><span id="c4"></span></div>
+</div>
+<div class="row r21">
+ <div class="box"><h3>Events per hour (last 48h)</h3><canvas id="tl" height="115"></canvas></div>
+ <div class="box"><h3>Attackers by country</h3><canvas id="cty" height="200"></canvas></div>
+</div>
+<div class="row r21">
+ <div class="box"><h3>Attack activity by hour (UTC)</h3><div id="hm"></div></div>
+ <div class="card blue"><small>Active attackers (last 15 min)</small><b id="act">0</b><small>Events, last 12 hours</small><div class="mini" id="mini" style="margin-top:8px"></div></div>
+</div>
+<div class="row r21" id="att">
+ <div class="box"><h3>Top attackers</h3><table id="atbl"></table></div>
+ <div class="box"><h3>Severity split</h3><canvas id="sev" height="200"></canvas></div>
+</div>
+<div class="row r3" id="cred">
+ <div class="box"><h3>Top passwords tried</h3><div id="pw"></div></div>
+ <div class="box"><h3>Top usernames tried</h3><div id="us"></div></div>
+ <div class="box"><h3>IPs per country</h3><div id="cb"></div></div>
+</div>
+<div class="box" id="ev"><h3>Recent events <small style="color:#64748b;font-weight:400">(click a row to expand)</small></h3><div class="feed" id="rec"></div></div>
+</main></div>
+<script>
+const SNAP="https://raw.githubusercontent.com/rutuja-late/honeypot-attack-detection/data/stats.json";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SEV={Critical:"#dc2626",High:"#ea580c",Medium:"#ca8a04",Low:"#16a34a"};
+const EVC={"cowrie.login.success":"#dc2626","cowrie.session.file_download":"#dc2626","cowrie.login.failed":"#ea580c","cowrie.command.input":"#ca8a04"};
+const PAL=["#4f6bed","#f97316","#facc15","#22c55e","#a78bfa","#ef4444","#14b8a6","#ec4899","#64748b","#f59e0b"];
+const pill=(t,c)=>`<span class="b" style="--c:${c}">${esc(t)}</span>`;
+const cache={};
+function put(id,html,after){if(cache[id]===html)return;cache[id]=html;$(id).innerHTML=html;if(after)requestAnimationFrame(()=>requestAnimationFrame(after));}
+function countUp(id,to){const el=$(id),from=+el.dataset.v||0;to=+to||0;el.dataset.v=to;
+ if(from===to){el.textContent=to.toLocaleString();return;}
+ const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/800),e=1-Math.pow(1-p,3);
+  el.textContent=Math.round(from+(to-from)*e).toLocaleString();if(p<1)requestAnimationFrame(f);})(t0);}
+function bars(id,rows,color){const m=Math.max(1,...rows.map(r=>r.n));
+ put(id,rows.length?rows.map(r=>`<div class="bar" style="--c:${color}">${esc(r.k)} <span style="float:right;color:#64748b">${esc(r.n)}</span><div><i data-w="${Math.round(r.n/m*100)}"></i></div></div>`).join(""):'<div style="color:#64748b;font-size:12px">No data yet</div>',
+ ()=>$(id).querySelectorAll("i[data-w]").forEach(i=>i.style.width=i.dataset.w+"%"));}
+function ma(a){return a.map((_,i)=>{const s=a.slice(Math.max(0,i-2),i+1);return Math.round(s.reduce((x,y)=>x+y,0)/s.length*10)/10;});}
+function heat(rows){const days=[...new Set(rows.map(x=>x.k.slice(0,10)))].sort(),map={};rows.forEach(x=>map[x.k]=x.n);
+ const mx=Math.max(1,...rows.map(x=>x.n));
+ let h='<div class="hm"><span></span>'+[...Array(24).keys()].map(i=>`<i class="hh">${i%3===0?i:""}</i>`).join("");
+ days.forEach(d=>{h+=`<span class="dl">${esc(d.slice(5))}</span>`;
+  for(let i=0;i<24;i++){const k=d+"T"+String(i).padStart(2,"0"),n=map[k]||0,s=n?7+Math.round(n/mx*12):4;
+   h+=`<b class="c" title="${esc(k+":00 UTC - "+n+" events")}"><u style="--s:${s}px;--o:${n?1:.2}"></u></b>`;}});
+ return h+"</div>";}
+const seen=new Set(),open=new Set();let first=true;
+function feed(rows){put("rec",rows.map(e=>{const key=e.ts+"|"+e.src_ip+"|"+e.eventid+"|"+(e.command||""),
+  c=EVC[e.eventid]||"#64748b",n=String(e.eventid).replace("cowrie.",""),isNew=!first&&!seen.has(key);seen.add(key);
+  return `<div class="fi${isNew?" new":""}${open.has(key)?" open":""}" data-k="${esc(key)}"><span class="av" style="--c:${c}">${esc(n.charAt(0).toUpperCase())}</span><div><b>${esc(e.src_ip)}</b><small>${esc(n)}${e.username?" \u00B7 "+esc(e.username):""}${e.command?" \u00B7 "+esc(e.command):""}</small></div><time>${esc(String(e.ts||"").slice(11,19))}</time><p>time: ${esc(e.ts)}<br>event: ${esc(e.eventid)}<br>user: ${esc(e.username||"-")}<br>command: ${esc(e.command||"-")}</p></div>`;}).join(""));first=false;}
+$("rec").addEventListener("click",ev=>{const f=ev.target.closest(".fi");if(!f)return;const k=f.dataset.k;
+ if(open.has(k)){open.delete(k);f.classList.remove("open");}else{open.add(k);f.classList.add("open");}
+ cache.rec=$("rec").innerHTML;});
+function chip(id,cur,prev){const d=prev?Math.round((cur-prev)/prev*100):null;
+ $(id).innerHTML=d===null?pill("live","#16a34a"):pill((d>=0?"\u25B2 ":"\u25BC ")+Math.abs(d)+"% vs prev hour",d>=0?"#16a34a":"#dc2626");}
+let tl,ct,sv;
+function pie(ref,id,labels,data,colors){
+ if(!ref)return new Chart(document.getElementById(id),{type:"pie",data:{labels,datasets:[{data,backgroundColor:colors,borderColor:"#fff",borderWidth:2}]},options:{plugins:{legend:{position:"bottom",labels:{boxWidth:10,font:{size:11}}}}}});
+ ref.data.labels=labels;ref.data.datasets[0].data=data;ref.data.datasets[0].backgroundColor=colors;ref.update();return ref;}
+async function load(){
+ let d;try{const r=await fetch(SNAP+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw 0;d=await r.json();}catch(e){const a=$("alert");a.style.display="block";a.textContent="Snapshot not available yet. The server publishes new data every few minutes.";return;}
+ const t=d.totals;
+ const g=Date.parse(d.generated_at)||Date.now();$("upd").textContent=new Date(g).toLocaleTimeString()+" ("+Math.max(0,Math.round((Date.now()-g)/60000))+" min ago)";
+ countUp("k1",t.events);countUp("k2",t.ips);countUp("k3",t.blocked);countUp("k4",t.high);
+ chip("c1",d.timeline[0]?d.timeline[0].n:0,d.timeline[1]?d.timeline[1].n:0);
+ $("c2").innerHTML=pill("tracked","#4f6bed");
+ $("c3").innerHTML=t.blocked>0?pill("auto-blocked","#dc2626"):pill("none","#64748b");
+ $("c4").innerHTML=t.high>0?pill("investigate","#ea580c"):pill("clear","#16a34a");
+ const al=$("alert");if(t.blocked>0){al.style.display="block";al.textContent="\u26A0 "+t.blocked+" attacker IP(s) auto-blocked by the response engine";}else al.style.display="none";
+ const now=Date.parse(d.generated_at)||Date.now();countUp("act",new Set(d.recent.filter(e=>now-Date.parse(e.ts)<15*60000).map(e=>e.src_ip)).size);
+ const last=d.timeline.slice(0,12).map(x=>x.n).reverse(),mx=Math.max(1,...last);
+ put("mini",last.map(n=>`<i data-h="${Math.max(6,Math.round(n/mx*100))}"></i>`).join(""),()=>$("mini").querySelectorAll("i").forEach(i=>i.style.height=i.dataset.h+"%"));
+ put("hm",heat(d.timeline));
+ put("atbl","<tr><th>IP</th><th>Country</th><th>Score</th><th>Severity</th><th>Status</th></tr>"+d.attackers.map(a=>{const c=SEV[a.severity]||"#64748b";
+  return `<tr><td>${esc(a.ip)}</td><td>${esc(a.country)}</td><td><div class="sc" style="--c:${c}"><span><i data-w="${Math.min(100,+a.score||0)}"></i></span>${esc(a.score)}</div></td><td>${pill(a.severity,c)}</td><td>${a.blocked?pill("BLOCKED","#dc2626"):pill("active","#64748b")}</td></tr>`;}).join(""),
+  ()=>$("atbl").querySelectorAll("i[data-w]").forEach(i=>i.style.width=i.dataset.w+"%"));
+ bars("pw",d.passwords,"#ea580c");bars("us",d.usernames,"#4f6bed");bars("cb",d.countries.map(x=>({k:x.k||"Unknown",n:x.n})),"#14b8a6");
+ feed(d.recent);
+ const labels=d.timeline.map(x=>x.k.slice(5,10)+" "+x.k.slice(11)+"h").reverse(),data=d.timeline.map(x=>x.n).reverse();
+ if(!tl){tl=new Chart($("tl"),{data:{labels,datasets:[{type:"bar",label:"Events",data,backgroundColor:"#4f6bed",borderRadius:5},{type:"line",label:"3h average",data:ma(data),borderColor:"#f97316",tension:.4,pointRadius:0}]},options:{plugins:{legend:{labels:{boxWidth:10,font:{size:11}}}},scales:{y:{beginAtZero:true,grid:{color:"#eef1fa"}},x:{grid:{display:false}}}}});}
+ else{tl.data.labels=labels;tl.data.datasets[0].data=data;tl.data.datasets[1].data=ma(data);tl.update();}
+ ct=pie(ct,"cty",d.countries.map(x=>x.k||"Unknown"),d.countries.map(x=>x.n),PAL);
+ const sc={Critical:0,High:0,Medium:0,Low:0};d.attackers.forEach(a=>{if(a.severity in sc)sc[a.severity]++;});
+ sv=pie(sv,"sev",Object.keys(sc),Object.values(sc),Object.keys(sc).map(k=>SEV[k]));
+}
+load();setInterval(load,60000);
+</script></body></html>
