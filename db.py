@@ -20,5 +20,11 @@ def init():
       score INTEGER DEFAULT 0, severity TEXT DEFAULT 'Low',
       country TEXT, blocked INTEGER DEFAULT 0, alerted INTEGER DEFAULT 0);
     CREATE TABLE IF NOT EXISTS offsets(k TEXT PRIMARY KEY, v INTEGER);
-    """)
+        CREATE TABLE IF NOT EXISTS alerts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts TEXT, ip TEXT, session TEXT, rule TEXT, severity TEXT, detail TEXT);
+    CREATE INDEX IF NOT EXISTS idx_alerts_ip ON alerts(ip);
+    CREATE TABLE IF NOT EXISTS responses(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts TEXT, ip TEXT, action TEXT, mode TEXT, note TEXT);""")
     c.commit()
