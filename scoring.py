@@ -1,6 +1,10 @@
 SUSPICIOUS = ["wget", "curl", "chmod", "/etc/passwd", "/etc/shadow", "uname",
               "crontab", "nc ", "base64", "rm -rf", "authorized_keys",
-              "busybox", "tftp"]
+              "busybox", "tftp",
+              # added after the detection-gap tests (docs/DETECTION_TESTS.md)
+              "nmap", "masscan", "scp ", "sftp ", "xmrig", "minerd", "cpuminer",
+              "history -c", "histfile", "| sh", "|sh", "| bash", "|bash",
+              "urllib", "urlretrieve", "/dev/tcp", "ncat", "netcat", "shred"]
 
 def severity(score):
     if score >= 100: return "Critical"
