@@ -31,3 +31,15 @@ def map_events(events):
                 n = out.get(tid, (name, 0))[1]
                 out[tid] = (name, n + 1)
     return out
+
+def map_with_evidence(events, per_tech=3):
+    out = {}
+    for e in events:
+        for tid, name, test in RULES:
+            if test(e):
+                t = out.setdefault(tid, {"name": name, "count": 0, "evidence": []})
+                t["count"] += 1
+                if len(t["evidence"]) < per_tech:
+                    t["evidence"].append({"ts": e["ts"], "event": e["eventid"],
+                        "detail": e.get("command") or e.get("username") or e.get("url") or ""})
+    return out

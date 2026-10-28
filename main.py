@@ -1,5 +1,5 @@
 import json, os, time
-import db, scoring, blocker, notifier, geo
+import db, scoring, blocker, notifier, geo, detect
 from config import LOG_PATH, WHITELIST, BLOCK_THRESHOLD
 
 def read_new(path, pos):
@@ -38,6 +38,11 @@ def handle(c, e):
     if sev in ("High", "Critical") and not row["alerted"]:
         notifier.send(f"[{sev}] attacker {ip} ({row['country']}) score={score}")
         c.execute("UPDATE attackers SET alerted=1 WHERE ip=?", (ip,))
+    hit = detect.classify(c, e)
+    if hit and detect.record(c, ip, e.get("session"), ts, *hit):
+        rule, asev, detail = hit
+        if asev == "Critical":
+            notifier.send(f"[ALERT {asev}] {rule} from {ip}: {detail}")
     if score >= BLOCK_THRESHOLD and not row["blocked"] and ip not in WHITELIST:
         blocker.block(ip)
         c.execute("UPDATE attackers SET blocked=1 WHERE ip=?", (ip,))
