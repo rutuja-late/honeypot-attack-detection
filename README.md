@@ -275,3 +275,11 @@ Only traffic hitting my own server is recorded. The server holds no real data. A
 *Built as a final-year project · Honeypot for Attack Detection*
 
 </div>
+
+## Real-time alerts, response simulation, attacker timeline
+
+- **Alerts** (`detect.py`): brute force, successful login, suspicious commands, downloads, scans, miners, history tampering. One alert per rule per session/IP.
+- **Response** (`blocker.py`): `BLOCK_IP` at score 60, `MONITOR` at score 25. Default `RESPONSE_MODE=simulate` only records actions, the firewall is untouched; `RESPONSE_MODE=enforce` adds a real iptables DROP in `DOCKER-USER`.
+- **Timeline** (`timeline.py`): per-IP counts, risk score, MITRE ATT&CK techniques with evidence, ordered activity.
+- Dashboard: `docs/index.html` is served by Flask (live) and GitHub Pages (snapshot), dark/light toggle. Response buttons appear only on the local page.
+- Tests: `docs/DETECTION_TESTS.md`.

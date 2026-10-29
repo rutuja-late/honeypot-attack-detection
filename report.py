@@ -1,5 +1,6 @@
-import sys
+import os, sys
 import db, mitre
+from config import BASE
 
 def build(ip):
     c = db.conn()
@@ -27,5 +28,8 @@ def build(ip):
 
 if __name__ == "__main__":
     text = build(sys.argv[1])
-    open(f"/home/ubuntu/honeypot/reports/{sys.argv[1]}.txt", "w").write(text)
+    folder = os.path.join(BASE, "reports")
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, f"{sys.argv[1]}.txt"), "w") as f:
+        f.write(text)
     print(text)

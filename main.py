@@ -1,6 +1,6 @@
 import json, os, time
-import db, scoring, blocker, notifier, geo
-from config import LOG_PATH, WHITELIST, BLOCK_THRESHOLD
+import db, scoring, blocker, notifier, geo, detect
+from config import LOG_PATH, WHITELIST, BLOCK_THRESHOLD, MONITOR_THRESHOLD, RESPONSE_MODE
 
 def read_new(path, pos):
     lines = []
@@ -35,18 +35,31 @@ def handle(c, e):
     sev = scoring.severity(score)
     row = c.execute("SELECT * FROM attackers WHERE ip=?", (ip,)).fetchone()
     c.execute("UPDATE attackers SET score=?, severity=? WHERE ip=?", (score, sev, ip))
+
+    # Feature 1: real-time alerts
+    for a in detect.run(c, e):
+        if a["severity"] == "Critical":
+            notifier.send(f"[ALERT {a['severity']}] {a['rule']} from {ip}: {a['detail']}")
+
     if sev in ("High", "Critical") and not row["alerted"]:
         notifier.send(f"[{sev}] attacker {ip} ({row['country']}) score={score}")
         c.execute("UPDATE attackers SET alerted=1 WHERE ip=?", (ip,))
-    if score >= BLOCK_THRESHOLD and not row["blocked"] and ip not in WHITELIST:
-        blocker.block(ip)
-        c.execute("UPDATE attackers SET blocked=1 WHERE ip=?", (ip,))
-        notifier.send(f"[BLOCKED] {ip} auto-blocked (score {score})")
+
+    # Feature 3: response (simulate by default, see config.RESPONSE_MODE)
+    if ip in WHITELIST:
+        return
+    tag = "SIMULATED " if RESPONSE_MODE != "enforce" else ""
+    if score >= BLOCK_THRESHOLD and not row["blocked"]:
+        blocker.apply(c, ip, "BLOCK_IP", f"auto: score {score} >= {BLOCK_THRESHOLD}")
+        notifier.send(f"[{tag}BLOCK] {ip} (score {score})")
+    elif score >= MONITOR_THRESHOLD and not row["blocked"] and not blocker.is_monitored(c, ip):
+        blocker.apply(c, ip, "MONITOR", f"auto: score {score} >= {MONITOR_THRESHOLD}, monitoring increased")
 
 def main():
     db.init()
-    blocker.reapply()
     c = db.conn()
+    print(f"engine started, RESPONSE_MODE={RESPONSE_MODE}, log={LOG_PATH}", flush=True)
+    blocker.reapply(c)
     row = c.execute("SELECT v FROM offsets WHERE k='pos'").fetchone()
     pos = row["v"] if row else 0
     while True:

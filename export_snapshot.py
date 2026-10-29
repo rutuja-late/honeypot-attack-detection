@@ -52,6 +52,13 @@ def sanitize(d):
         for a in d.get("attackers", [])
     ]
     out["recent"] = [dict(e, src_ip=show_ip(e["src_ip"])) for e in d.get("recent", [])]
+    # new panels: alerts, response actions, per-attacker timelines (same masking)
+    out["alerts"] = [dict(a, ip=show_ip(a["ip"]), session="") for a in d.get("alerts", [])]
+    out["responses"] = [dict(r, ip=show_ip(r["ip"])) for r in d.get("responses", [])]
+    out["timelines"] = [
+        dict(t, ip=show_ip(t["ip"]), country=LAB_COUNTRY if t["ip"] in OWN_IPS else t.get("country"))
+        for t in d.get("timelines", []) if t
+    ]
     out["generated_at"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return out
 
